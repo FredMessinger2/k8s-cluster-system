@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K8s Cluster Visualizer</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .cluster-container { width: 100%; height: 600px; border: 1px solid #ccc; }
+        .pod { fill: #4CAF50; stroke: #2E7D32; stroke-width: 2px; }
+        .deployment { fill: #2196F3; stroke: #1565C0; stroke-width: 2px; }
+        .connection { stroke: #FF9800; stroke-width: 2px; }
+        .tooltip { position: absolute; padding: 10px; background: rgba(0,0,0,0.8); 
+                   color: white; border-radius: 5px; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <h1>Kubernetes Cluster Visualization</h1>
+    <div class="controls">
+        <button onclick="refreshData()">Refresh</button>
+        <span id="status">Loading...</span>
+    </div>
+    <div id="cluster-viz" class="cluster-container"></div>
+    
+    <script>
+        let svg, tooltip;
+        
+        function initVisualization() {
+            const container = d3.select("#cluster-viz");
+            svg = container.append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%");
+                
+            tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+        }
+        
+        async function fetchClusterData() {
+            try {
+                const response = await fetch('http://localhost:8080/api/cluster/info');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching cluster data:', error);
+                return null;
+            }
+        }
+        
+        function visualizeCluster(data) {
+            svg.selectAll("*").remove();
+            
+            if (!data) return;
+            
+            const width = 800;
+            const height = 600;
+            
+            // Create nodes for pods and deployments
+            const nodes = [];
+            
+            // Add deployment nodes
+            data.deployments.forEach((deployment, i) => {
+                nodes.push({
+                    id: deployment.name,
+                    type: 'deployment',
+                    name: deployment.name,
+                    namespace: deployment.namespace,
+                    x: 100 + (i % 4) * 180,
+                    y: 100,
+                    data: deployment
+                });
+            });
+            
+            // Add pod nodes
+            data.pods.forEach((pod, i) => {
+                nodes.push({
+                    id: pod.name,
+                    type: 'pod',
+                    name: pod.name,
+                    namespace: pod.namespace,
+                    status: pod.status,
+                    x: 100 + (i % 6) * 120,
+                    y: 250 + Math.floor(i / 6) * 100,
+                    data: pod
+                });
+            });
+            
+            // Draw connections (simplified)
+            const connections = svg.selectAll(".connection")
+                .data([]) // Add your connection logic here
+                .enter().append("line")
+                .attr("class", "connection");
+            
+            // Draw nodes
+            const nodeGroups = svg.selectAll(".node")
+                .data(nodes)
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+            
+            nodeGroups.append("circle")
+                .attr("r", d => d.type === 'deployment' ? 25 : 15)
+                .attr("class", d => d.type)
+                .on("mouseover", function(event, d) {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`
+                        <strong>${d.name}</strong><br/>
+                        Type: ${d.type}<br/>
+                        Namespace: ${d.namespace}
+                        ${d.status ? `<br/>Status: ${d.status}` : ''}
+                    `)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+            
+            nodeGroups.append("text")
+                .attr("dy", 5)
+                .attr("text-anchor", "middle")
+                .text(d => d.name.substring(0, 10));
+        }
+        
+        async function refreshData() {
+            document.getElementById("status").textContent = "Loading...";
+            const data = await fetchClusterData();
+            if (data) {
+                visualizeCluster(data);
+                document.getElementById("status").textContent = 
+                    `${data.podCount} pods, ${data.deploymentCount} deployments`;
+            } else {
+                document.getElementById("status").textContent = "Error loading data";
+            }
+        }
+        
+        // Initialize
+        initVisualization();
+        refreshData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>

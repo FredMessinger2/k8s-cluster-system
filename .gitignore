@@ -1,0 +1,34 @@
+# Build outputs
+java-app/build/
+java-app/.gradle/
+*.jar
+
+# Docker build files (temporary)
+java-app/Dockerfile.*
+!java-app/Dockerfile
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Debug/test scripts (keep only production scripts)
+debug-*.sh
+fix-*.sh
+force-*.sh
+minikube-fix.sh
+quick-working-build.sh
+test-*.yaml
+minimal-test.yaml
+
+# Temporary files
+*.tmp
+*.bak
+*.backup

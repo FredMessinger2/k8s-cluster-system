@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-app1
+  template:
+    metadata:
+      labels:
+        app: python-app1
+    spec:
+      containers:
+      - name: python-app1
+        image: python-k8s-app1:latest
+        env:
+        - name: APP_NAME
+          value: "app1"
+        - name: NATS_URL
+          value: "nats://nats-service:4222"

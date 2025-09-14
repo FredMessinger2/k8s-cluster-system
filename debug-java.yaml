@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: java-debug
+  labels:
+    app: java-debug
+spec:
+  serviceAccountName: k8s-manager-sa
+  containers:
+  - name: java-debug
+    image: k8s-manager:latest
+    command: ["/bin/sh"]
+    args: ["-c", "echo 'Debug container started'; java -version; ls -la /app/; echo 'Sleeping...'; sleep 3600"]
+  restartPolicy: Never

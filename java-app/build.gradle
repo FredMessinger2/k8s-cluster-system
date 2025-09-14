@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.k8smanager'
+version = '1.0.0'
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Kubernetes Java Client
+    implementation 'io.kubernetes:client-java:19.0.0'
+    
+    // Jackson for JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    
+    // NATS client (optional)
+    implementation 'io.nats:jnats:2.17.0'
+    
+    // SLF4J for logging
+    implementation 'org.slf4j:slf4j-simple:2.0.9'
+}
+
+application {
+    mainClass = 'com.k8smanager.K8sManagerApplication'
+}
+
+// Shadow plugin creates fat JAR with all dependencies
+shadowJar {
+    archiveBaseName = 'k8s-cluster-manager'
+    archiveClassifier = ''
+    archiveVersion = '1.0.0'
+    
+    manifest {
+        attributes 'Main-Class': 'com.k8smanager.K8sManagerApplication'
+    }
+}
+
+// Make build depend on shadowJar
+build.dependsOn shadowJar
+
+// Java compilation options
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    // Add JSR310 module for Java 8 time support
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
+}
