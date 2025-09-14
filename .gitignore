@@ -2,6 +2,7 @@
 java-app/build/
 java-app/.gradle/
 *.jar
+*.class
 
 # Docker build files (temporary)
 java-app/Dockerfile.*
