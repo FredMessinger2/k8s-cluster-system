@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-ui
+  labels:
+    app: flask-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-ui
+  template:
+    metadata:
+      labels:
+        app: flask-ui
+    spec:
+      containers:
+      - name: flask-ui
+        image: flask-ui:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-ui-service
+  labels:
+    app: flask-ui
+spec:
+  selector:
+    app: flask-ui
+  ports:
+  - port: 5000
+    targetPort: 5000
+  type: NodePort

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Cluster View - K8s Cluster Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Cluster Block Diagram</h1>
+        <p>Visual representation of cluster containment hierarchy</p>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <button class="btn btn-primary" onclick="refreshDiagram()">Refresh</button>
+        <button class="btn btn-secondary" onclick="toggleLayout()">Toggle Layout</button>
+        <span class="ms-3">Last updated: <span id="last-updated">-</span></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div id="cluster-diagram" style="min-height: 600px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/diagram.js') }}"></script>
+<script>
+let currentLayout = 'hierarchical';
+let diagramData = null;
+
+function refreshDiagram() {
+    fetch('/api/cluster-data')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            
+            diagramData = data;
+            renderClusterDiagram(data);
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+        })
+        .catch(error => {
+            console.error('Error fetching cluster data:', error);
+        });
+}
+
+function toggleLayout() {
+    currentLayout = currentLayout === 'hierarchical' ? 'force' : 'hierarchical';
+    if (diagramData) {
+        renderClusterDiagram(diagramData);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshDiagram();
+});
+</script>
+{% endblock %}

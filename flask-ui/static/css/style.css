@@ -1,0 +1,93 @@
+/* Custom styles for K8s Cluster Visualizer */
+
+.cluster-node {
+    stroke: #333;
+    stroke-width: 2px;
+    cursor: pointer;
+}
+
+.cluster-node.namespace {
+    fill: #e3f2fd;
+    stroke: #1976d2;
+}
+
+.cluster-node.deployment {
+    fill: #f3e5f5;
+    stroke: #7b1fa2;
+}
+
+.cluster-node.pod {
+    fill: #e8f5e8;
+    stroke: #388e3c;
+}
+
+.cluster-node.pod.running {
+    fill: #c8e6c9;
+    stroke: #2e7d32;
+}
+
+.cluster-node.pod.pending {
+    fill: #fff3e0;
+    stroke: #f57c00;
+}
+
+.cluster-node.pod.failed {
+    fill: #ffebee;
+    stroke: #d32f2f;
+}
+
+.cluster-text {
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    fill: #333;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+.cluster-text.title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.cluster-text.subtitle {
+    font-size: 10px;
+    fill: #666;
+}
+
+.connection-line {
+    stroke: #999;
+    stroke-width: 1px;
+    stroke-dasharray: 3,3;
+}
+
+.tooltip {
+    position: absolute;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-radius: 5px;
+    pointer-events: none;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+    margin-bottom: 1rem;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+}
+
+#cluster-diagram {
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
