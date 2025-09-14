@@ -31,6 +31,8 @@ public class K8sManagerApplication {
         
         server.createContext("/api/cluster/info", new ClusterInfoHandler());
         server.createContext("/api/nats/publish", new NatsPublishHandler());
+        server.createContext("/api/cache/stats", new CacheStatsHandler());
+        server.createContext("/api/cache/refresh", new RefreshCacheHandler());
         server.createContext("/health", new HealthHandler());
         
         server.setExecutor(null);
@@ -40,14 +42,17 @@ public class K8sManagerApplication {
         System.out.println("Endpoints:");
         System.out.println("  GET /api/cluster/info - Get cluster information");
         System.out.println("  POST /api/nats/publish - Publish to NATS topic");
+        System.out.println("  GET /api/cache/stats - Get cache statistics");
+        System.out.println("  POST /api/cache/refresh - Force cache refresh");
         System.out.println("  GET /health - Health check");
         
-        // Shutdown hook to clean up NATS connection
+        // Shutdown hook to clean up NATS connection and background threads
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
+                kubernetesService.shutdown();
                 natsService.close();
             } catch (Exception e) {
-                System.err.println("Error closing NATS connection: " + e.getMessage());
+                System.err.println("Error during shutdown: " + e.getMessage());
             }
         }));
     }
@@ -157,13 +162,75 @@ public class K8sManagerApplication {
         }
     }
     
+    static class CacheStatsHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            
+            if ("GET".equals(exchange.getRequestMethod())) {
+                try {
+                    Map<String, Object> stats = kubernetesService.getCacheStats();
+                    String jsonResponse = objectMapper.writeValueAsString(stats);
+                    
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, jsonResponse.length());
+                    
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(jsonResponse.getBytes());
+                    os.close();
+                } catch (Exception e) {
+                    String errorResponse = "{\"error\":\"" + e.getMessage().replaceAll("\"", "'") + "\"}";
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(500, errorResponse.length());
+                    
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(errorResponse.getBytes());
+                    os.close();
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1);
+            }
+        }
+    }
+    
+    static class RefreshCacheHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            
+            if ("POST".equals(exchange.getRequestMethod())) {
+                try {
+                    kubernetesService.refreshCache();
+                    String response = "{\"status\":\"cache refresh triggered\"}";
+                    
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, response.length());
+                    
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                } catch (Exception e) {
+                    String errorResponse = "{\"error\":\"" + e.getMessage().replaceAll("\"", "'") + "\"}";
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(500, errorResponse.length());
+                    
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(errorResponse.getBytes());
+                    os.close();
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1);
+            }
+        }
+    }
+    
     static class HealthHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             
             if ("GET".equals(exchange.getRequestMethod())) {
-                String response = "{\"status\":\"healthy\",\"service\":\"k8s-manager\",\"nats\":\"connected\"}";
+                String response = "{\"status\":\"healthy\",\"service\":\"k8s-manager\",\"nats\":\"connected\",\"cache\":\"active\"}";
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(200, response.length());
                 
