@@ -19,8 +19,9 @@ dependencies {
     
     // Jackson for JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
     
-    // NATS client (optional)
+    // NATS client
     implementation 'io.nats:jnats:2.17.0'
     
     // SLF4J for logging
@@ -31,26 +32,13 @@ application {
     mainClass = 'com.k8smanager.K8sManagerApplication'
 }
 
-// Shadow plugin creates fat JAR with all dependencies
 shadowJar {
     archiveBaseName = 'k8s-cluster-manager'
     archiveClassifier = ''
     archiveVersion = '1.0.0'
-    
-    manifest {
-        attributes 'Main-Class': 'com.k8smanager.K8sManagerApplication'
-    }
+    mergeServiceFiles()
 }
 
-// Make build depend on shadowJar
-build.dependsOn shadowJar
-
-// Java compilation options
 compileJava {
     options.encoding = 'UTF-8'
-}
-
-dependencies {
-    // Add JSR310 module for Java 8 time support
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
 }

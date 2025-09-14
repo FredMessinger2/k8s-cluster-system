@@ -15,6 +15,7 @@ spec:
       containers:
       - name: python-app3
         image: python-k8s-app3:latest
+        imagePullPolicy: Never
         env:
         - name: APP_NAME
           value: "app3"
