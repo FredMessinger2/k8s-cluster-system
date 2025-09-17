@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-k8s-manager
+  labels:
+    app: python-k8s-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-k8s-manager
+  template:
+    metadata:
+      labels:
+        app: python-k8s-manager
+    spec:
+      serviceAccountName: python-k8s-manager-sa
+      containers:
+      - name: python-k8s-manager
+        image: python-k8s-manager:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: NATS_URL
+          value: "nats://nats-service:4222"
+        - name: PORT
+          value: "8080"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-k8s-manager-service
+  labels:
+    app: python-k8s-manager
+spec:
+  selector:
+    app: python-k8s-manager
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
